@@ -1,0 +1,7 @@
+# rustfmt doc - https://rust-lang.github.io/rustfmt/
+
+hard_tabs = true
+edition = "2021"
+max_width = 110
+chain_width = 60
+array_width = 60
