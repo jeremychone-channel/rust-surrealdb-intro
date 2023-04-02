@@ -1,8 +1,10 @@
 #![allow(unused)] // While exploring, remove for prod.
+
 use anyhow::{anyhow, Result};
 use std::collections::BTreeMap;
+use surrealdb::dbs::{Response, Session};
+use surrealdb::kvs::Datastore;
 use surrealdb::sql::{thing, Datetime, Object, Thing, Value};
-use surrealdb::{Datastore, Response, Session};
 
 type DB = (Datastore, Session);
 
