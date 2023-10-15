@@ -10,13 +10,19 @@ type DB = (Datastore, Session);
 
 #[tokio::main]
 async fn main() -> Result<()> {
-	let db: &DB = &(Datastore::new("memory").await?, Session::for_db("my_ns", "my_db"));
+	let db: &DB = &(
+		Datastore::new("memory").await?,
+		Session::owner()
+			.with_ns("my_ns".into())
+			.with_db("my_db".into()),
+	);
 	let (ds, ses) = db;
 
 	// --- Create
 	let t1 = create_task(db, "Task 01", 10).await?;
 	let t2 = create_task(db, "Task 02", 7).await?;
-
+	println!("{t1}, {t2}");
+	
 	// --- Merge
 	let sql = "UPDATE $th MERGE $data RETURN id";
 	let data: BTreeMap<String, Value> = [
@@ -29,16 +35,16 @@ async fn main() -> Result<()> {
 		("data".into(), data.into()),
 	]
 	.into();
-	ds.execute(sql, ses, Some(vars), true).await?;
+	ds.execute(sql, ses, Some(vars)).await?;
 
 	// --- Delete
 	let sql = "DELETE $th";
 	let vars: BTreeMap<String, Value> = [("th".into(), thing(&t1)?.into())].into();
-	ds.execute(sql, ses, Some(vars), true).await?;
+	ds.execute(sql, ses, Some(vars)).await?;
 
 	// --- Select
 	let sql = "SELECT * from task";
-	let ress = ds.execute(sql, ses, None, false).await?;
+	let ress = ds.execute(sql, ses, None).await?;
 	for object in into_iter_objects(ress)? {
 		println!("record {}", object?);
 	}
@@ -56,7 +62,7 @@ async fn create_task((ds, ses): &DB, title: &str, priority: i32) -> Result<Strin
 	.into();
 	let vars: BTreeMap<String, Value> = [("data".into(), data.into())].into();
 
-	let ress = ds.execute(sql, ses, Some(vars), false).await?;
+	let ress = ds.execute(sql, ses, Some(vars)).await?;
 
 	into_iter_objects(ress)?
 		.next()
